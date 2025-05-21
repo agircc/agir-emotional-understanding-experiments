@@ -25,15 +25,15 @@ logger = logging.getLogger(__name__)
 load_dotenv()
 api_key = os.getenv("OPENAI_API_KEY")
 
-# 清理可能影响 OpenAI 客户端的环境变量
+# Clear environment variables that may affect OpenAI client initialization
 proxy_vars = ['http_proxy', 'https_proxy', 'HTTP_PROXY', 'HTTPS_PROXY', 
               'OPENAI_PROXY', 'openai_proxy']
 for var in proxy_vars:
     if var in os.environ:
-        logger.info(f"清除环境变量 {var} 以避免 OpenAI 客户端初始化错误")
+        logger.info(f"Clearing environment variable {var} to avoid OpenAI client initialization errors")
         os.environ.pop(var)
 
-# 简化创建 OpenAI 客户端
+# Initialize OpenAI client
 client = OpenAI(api_key=api_key)
 
 # Constants

@@ -10,7 +10,7 @@ remove-env:
 	conda env remove -n agir-eu
 
 recreate-env: remove-env env
-	@echo "环境已重新创建，请运行: conda activate agir-eu"
+	@echo "Environment recreated. Please run: conda activate agir-eu"
 
 clean:
 	rm -rf ./__pycache__

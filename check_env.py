@@ -7,55 +7,55 @@ import json
 from dotenv import load_dotenv
 
 def main():
-    """检查环境配置并提供诊断信息"""
-    print("环境检查工具")
-    print("=============")
+    """Check environment configuration and provide diagnostic information"""
+    print("Environment Check Tool")
+    print("======================")
     
-    # 检查 Python 版本
-    print(f"Python 版本: {sys.version}")
+    # Check Python version
+    print(f"Python version: {sys.version}")
     
-    # 检查 OPENAI_API_KEY
+    # Check OPENAI_API_KEY
     load_dotenv()
     api_key = os.getenv("OPENAI_API_KEY")
     if api_key:
         masked_key = api_key[:5] + "*" * (len(api_key) - 9) + api_key[-4:]
-        print(f"OPENAI_API_KEY: {masked_key} (有效)")
+        print(f"OPENAI_API_KEY: {masked_key} (valid)")
     else:
-        print("OPENAI_API_KEY: 未设置 (请在 .env 文件中设置)")
+        print("OPENAI_API_KEY: not set (please configure in .env file)")
     
-    # 检查可能影响 OpenAI 客户端的环境变量
+    # Check environment variables that may affect OpenAI client
     proxy_vars = ['http_proxy', 'https_proxy', 'HTTP_PROXY', 'HTTPS_PROXY', 
                   'OPENAI_PROXY', 'openai_proxy']
     
     found_proxies = False
-    print("\n可能影响 OpenAI 客户端的代理设置:")
+    print("\nProxy settings that may affect OpenAI client:")
     for var in proxy_vars:
         if var in os.environ:
             found_proxies = True
             print(f"  - {var}: {os.environ[var]}")
     
     if not found_proxies:
-        print("  未发现代理设置")
+        print("  No proxy settings detected")
     
-    # 如果发现代理设置，提供建议
+    # Provide recommendations if proxy settings are found
     if found_proxies:
-        print("\n检测到代理设置可能导致 OpenAI 客户端初始化问题。建议:")
-        print("1. 临时解决方案: 在运行代码前清除这些变量")
-        print("   例如: unset HTTP_PROXY HTTPS_PROXY")
-        print("2. 在代码中显式处理代理设置 (已在 main.py 中实现)")
+        print("\nProxy settings detected that may cause OpenAI client initialization issues. Recommendations:")
+        print("1. Temporary solution: Clear these variables before running the code")
+        print("   Example: unset HTTP_PROXY HTTPS_PROXY")
+        print("2. Handle proxy settings explicitly in the code (already implemented in main.py)")
     
-    print("\n依赖检查:")
+    print("\nDependency check:")
     try:
         import openai
-        print(f"  openai 版本: {openai.__version__}")
+        print(f"  openai version: {openai.__version__}")
     except ImportError:
-        print("  openai 库未安装")
+        print("  openai library not installed")
     
     try:
         import tqdm
-        print(f"  tqdm 版本: {tqdm.__version__}")
+        print(f"  tqdm version: {tqdm.__version__}")
     except ImportError:
-        print("  tqdm 库未安装")
+        print("  tqdm library not installed")
 
 if __name__ == "__main__":
     main() 

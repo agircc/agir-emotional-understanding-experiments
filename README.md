@@ -1,69 +1,81 @@
 # EU (Emotional Understanding) Testing with GPT-4.1-nano
 
-通过 python 代码，调用 gpt-4.1-nano 测试下 EU.jsonl
+This project uses Python code to test the EU.jsonl dataset with the GPT-4.1-nano model.
 
-将结果记录到一个文件里面，记录下 gpt 返回的答案，以及正确答案
+Results are recorded in a file, capturing both the GPT model's responses and the correct answers.
 
-- 需要支持断开后，能继续上次的结果继续测试
-- 需要支持传入测试几条记录
-- 使用 conda 和 makefile
+Key features:
+- Supports resuming testing from the point of interruption
+- Allows specifying the number of records to test
+- Uses conda and makefile for environment management
 
-## 环境设置
+## Environment Setup
 
-1. 克隆本仓库
-2. 创建并激活 conda 环境:
+1. Clone this repository
+2. Create and activate the conda environment:
 
 ```
 make env
 conda activate agir-eu
 ```
 
-3. 配置 API Key:
+3. Configure API Key:
 
 ```
 cp .env-example .env
 ```
 
-然后编辑 `.env` 文件，添加你的 OpenAI API 密钥:
+Then edit the `.env` file to add your OpenAI API key:
 
 ```
 OPENAI_API_KEY=your_openai_api_key_here
 ```
 
-## 使用方法
+## Usage
 
-### 运行完整测试
+### Run Complete Test
 
 ```
 make run
 ```
 
-### 限制测试记录数量
+### Limit Number of Test Records
 
 ```
 make run-limit limit=10
 ```
 
-这将只测试前 10 条记录。
+This will test only the first 10 records.
 
-### 从上次中断处继续测试
+### Resume Testing from Previous Interruption
 
 ```
-make resume
+make resume limit=20
 ```
 
-## 结果查看
+This will resume testing from where it left off, processing 20 records at a time.
 
-测试结果保存在 `results/results.jsonl` 文件中。每一行包含一个 JSON 对象，其中包含:
+### Recreate Environment
 
-- 原始场景
-- 正确的情绪和原因
-- GPT 预测的情绪和原因
-- 预测是否正确的指标
+If you need to recreate the conda environment:
 
-进度信息保存在 `results/progress.json` 文件中，用于支持断点续测。
+```
+make recreate-env
+conda activate agir-eu
+```
 
-测试完成后，程序会显示统计信息，包括:
-- 情绪预测准确率
-- 原因预测准确率
-- 两者都正确的准确率
+## Results
+
+Test results are saved in the `results/results.jsonl` file. Each line contains a JSON object with:
+
+- Original scenario
+- Correct emotion and reason
+- GPT's predicted emotion and reason
+- Accuracy metrics
+
+Progress information is saved in `results/progress.json` to support resuming from interruptions.
+
+After completion, the program displays statistics including:
+- Emotion prediction accuracy
+- Reason prediction accuracy
+- Combined accuracy (both correct)
