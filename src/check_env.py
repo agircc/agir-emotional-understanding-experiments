@@ -23,6 +23,13 @@ def main():
     else:
         print("OPENAI_API_KEY: not set (please configure in .env file)")
     
+    # Check GPT model configuration
+    gpt_model = os.getenv("GPT_MODEL")
+    if gpt_model:
+        print(f"GPT_MODEL: {gpt_model}")
+    else:
+        print("GPT_MODEL: not set (will use default gpt-4.1-nano)")
+    
     # Check environment variables that may affect OpenAI client
     proxy_vars = ['http_proxy', 'https_proxy', 'HTTP_PROXY', 'HTTPS_PROXY', 
                   'OPENAI_PROXY', 'openai_proxy']

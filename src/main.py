@@ -37,15 +37,20 @@ for var in proxy_vars:
 client = OpenAI(api_key=api_key)
 
 # Constants
-MODEL_NAME = "gpt-4.1-nano"
+MODEL_NAME = os.getenv("GPT_MODEL", "gpt-4.1-nano")
 INPUT_FILE = "EU.jsonl"
 RESULTS_DIR = "results"
-PROGRESS_FILE = f"{RESULTS_DIR}/progress.json"
-RESULTS_FILE = f"{RESULTS_DIR}/results.jsonl"
+# Create model-specific directory name by replacing dots with hyphens
+MODEL_DIR = MODEL_NAME.replace(".", "-")
+MODEL_RESULTS_DIR = f"{RESULTS_DIR}/{MODEL_DIR}"
+PROGRESS_FILE = f"{MODEL_RESULTS_DIR}/progress.json"
+RESULTS_FILE = f"{MODEL_RESULTS_DIR}/results.jsonl"
 
 def setup_directories() -> None:
     """Create necessary directories if they don't exist."""
     Path(RESULTS_DIR).mkdir(exist_ok=True)
+    Path(MODEL_RESULTS_DIR).mkdir(exist_ok=True)
+    logger.info(f"Results will be stored in: {MODEL_RESULTS_DIR}")
 
 def load_data(file_path: str) -> List[Dict[str, Any]]:
     """Load data from JSONL file."""
