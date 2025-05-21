@@ -27,9 +27,6 @@ var/
 .env-local
 .venv
 
-# Project specific
-results/
-
 # IDE
 .idea/
 .vscode/
