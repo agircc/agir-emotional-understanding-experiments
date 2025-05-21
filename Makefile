@@ -17,13 +17,13 @@ clean:
 	rm -rf ./venv
 
 check-env:
-	PYTHONPATH=$(shell pwd) src/python check_env.py
+	PYTHONPATH=$(shell pwd) python src/check_env.py
 
 run: check-env
-	PYTHONPATH=$(shell pwd) src/python main.py
+	PYTHONPATH=$(shell pwd) python src/main.py
 
 run-limit: check-env
-	PYTHONPATH=$(shell pwd) src/python main.py --limit $(limit)
+	PYTHONPATH=$(shell pwd) python src/main.py --limit $(limit)
 
 resume: check-env
-	PYTHONPATH=$(shell pwd) src/python main.py --resume --limit $(limit)
+	PYTHONPATH=$(shell pwd) python src/main.py --resume --limit $(limit)
