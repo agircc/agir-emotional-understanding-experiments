@@ -5,6 +5,7 @@ import os
 import json
 import argparse
 import time
+import sys
 from datetime import datetime
 from pathlib import Path
 from typing import List, Dict, Any, Optional
@@ -102,22 +103,98 @@ def query_gpt(prompt: str, retries: int = 3, retry_delay: int = 5) -> Optional[D
     """Query the GPT model with retry logic."""
     for attempt in range(retries):
         try:
-            response = client.chat.completions.create(
-                model=MODEL_NAME,
-                messages=[{"role": "user", "content": prompt}],
-                temperature=0,
-                max_tokens=150,
-                response_format={"type": "json_object"}
-            )
-            return json.loads(response.choices[0].message.content)
+            # Set parameters based on model type
+            params = {
+                "model": MODEL_NAME,
+                "messages": [{"role": "user", "content": prompt}]
+            }
+            
+            # Different models use different parameter names for token limits and formats
+            if MODEL_NAME.startswith("o4"):
+                # For o4 models:
+                # 1. Use higher token limit
+                # 2. For o4-mini, response_format can sometimes cause issues
+                params["max_completion_tokens"] = 1000
+                
+                # o4-mini doesn't support custom temperature, only default (1)
+                # Don't set temperature at all for o4-mini
+                
+                # Only use response_format if not o4-mini specifically
+                if MODEL_NAME != "o4-mini":
+                    params["response_format"] = {"type": "json_object"}
+                    # Only set temperature for non-o4-mini models
+                    params["temperature"] = 0
+                else:
+                    # For o4-mini, add explicit instruction for JSON format
+                    params["messages"][0]["content"] += "\n\nIMPORTANT: Your response MUST be in valid JSON format with the fields 'emotion' and 'cause' only."
+            else:
+                params["max_tokens"] = 500
+                params["temperature"] = 0
+                params["response_format"] = {"type": "json_object"}
+            
+            # Log the parameters we're using
+            logger.info(f"Querying model with parameters: {params}")
+                
+            response = client.chat.completions.create(**params)
+            
+            # Debug logging
+            logger.info(f"Response type: {type(response)}")
+            logger.info(f"Response choices: {response.choices}")
+            
+            if len(response.choices) > 0:
+                logger.info(f"Message content type: {type(response.choices[0].message.content)}")
+                logger.info(f"Raw message content: {repr(response.choices[0].message.content)}")
+                
+                # Check for empty content
+                if not response.choices[0].message.content.strip():
+                    logger.error("Received empty response from model")
+                    if attempt < retries - 1:
+                        logger.info(f"Retrying with simpler prompt...")
+                        # Try a simpler prompt if this was an empty response
+                        if MODEL_NAME == "o4-mini":
+                            # Simplify prompt for retry
+                            simple_scenario = prompt.split('Scenario: ')[1].split('\n\nSubject:')[0]
+                            simple_subject = prompt.split('Subject: ')[1].split('\n\nEmotion choices:')[0]
+                            simple_prompt = f'From this scenario: "{simple_scenario}", the subject is "{simple_subject}". '
+                            simple_prompt += 'What is their emotion and its cause? Reply only with JSON: {"emotion": "chosen_emotion", "cause": "chosen_cause"}'
+                            
+                            params["messages"][0]["content"] = simple_prompt
+                            continue
+                    else:
+                        logger.error("Empty response after all retries. Exiting.")
+                        sys.exit(1)
+            else:
+                logger.error("No choices in response")
+                sys.exit(1)
+            
+            # Parse JSON or exit
+            try:
+                # Try direct JSON parsing
+                if response.choices[0].message.content:
+                    try:
+                        return json.loads(response.choices[0].message.content)
+                    except json.JSONDecodeError as je:
+                        logger.error(f"JSON decode error: {je}")
+                        logger.error(f"Content that failed to parse: {repr(response.choices[0].message.content)}")
+                        logger.error("Non-JSON response received. Exiting.")
+                        sys.exit(1)
+                else:
+                    logger.error("Empty response content. Exiting.")
+                    sys.exit(1)
+                    
+            except Exception as je:
+                logger.error(f"Error parsing response: {je}")
+                logger.error("Exiting due to invalid response format.")
+                sys.exit(1)
+                
         except Exception as e:
             logger.error(f"Error querying GPT (attempt {attempt+1}/{retries}): {str(e)}")
             if attempt < retries - 1:
                 logger.info(f"Retrying in {retry_delay} seconds...")
                 time.sleep(retry_delay)
             else:
-                logger.error("Max retries reached. Skipping this item.")
-                return None
+                logger.error("Max retries reached. Exiting.")
+                sys.exit(1)
 
 def evaluate_responses(gpt_response: Dict[str, str], item: Dict[str, Any]) -> Dict[str, Any]:
     """Evaluate GPT's responses against the ground truth."""
