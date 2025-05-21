@@ -114,7 +114,7 @@ def query_gpt(prompt: str, retries: int = 3, retry_delay: int = 5) -> Optional[D
                 # For o4 models:
                 # 1. Use higher token limit
                 # 2. For o4-mini, response_format can sometimes cause issues
-                params["max_completion_tokens"] = 1000
+                params["max_completion_tokens"] = 2000
                 
                 # o4-mini doesn't support custom temperature, only default (1)
                 # Don't set temperature at all for o4-mini

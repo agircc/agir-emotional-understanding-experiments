@@ -26,7 +26,7 @@ run-limit: check-env
 	PYTHONPATH=$(shell pwd) python src/main.py --limit $(limit)
 
 resume: check-env
-	PYTHONPATH=$(shell pwd) python src/main.py --resume --limit $(limit)
+	PYTHONPATH=$(shell pwd) python src/main.py --resume
 
 analyze:
 	PYTHONPATH=$(shell pwd) python src/analyze_results.py
