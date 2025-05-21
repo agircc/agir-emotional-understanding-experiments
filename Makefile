@@ -1,4 +1,4 @@
-.PHONY: env clean run check-env remove-env recreate-env
+.PHONY: env clean run check-env remove-env recreate-env analyze analyze-model compare-models
 
 env:
 	conda env create -f environment.yml
@@ -27,3 +27,12 @@ run-limit: check-env
 
 resume: check-env
 	PYTHONPATH=$(shell pwd) python src/main.py --resume --limit $(limit)
+
+analyze:
+	PYTHONPATH=$(shell pwd) python src/analyze_results.py
+
+analyze-model:
+	PYTHONPATH=$(shell pwd) python src/analyze_results.py --model $(model)
+
+compare-models:
+	PYTHONPATH=$(shell pwd) python src/analyze_results.py --compare

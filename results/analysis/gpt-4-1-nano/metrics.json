@@ -1,0 +1,6 @@
+{
+  "total_items": 400,
+  "emotion_accuracy": 0.325,
+  "cause_accuracy": 0.475,
+  "both_correct_accuracy": 0.24
+}
