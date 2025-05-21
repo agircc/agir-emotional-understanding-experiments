@@ -1,0 +1,3 @@
+Model,Emotion Accuracy,Cause Accuracy,Both Correct
+o4-mini,0.6807692307692308,0.7769230769230769,0.6153846153846154
+gpt-4-1-nano,0.325,0.475,0.24
