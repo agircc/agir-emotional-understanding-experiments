@@ -90,7 +90,7 @@ Provide your answer in JSON format with two fields: "emotion" and "cause".
 
 def query_agir_api(prompt: str, retries: int = 3, retry_delay: int = 5) -> Optional[Dict[str, Any]]:
     """Query the agir emotion master API with retry logic."""
-    url = f"{API_BASE_URL}/chat/completions"
+    url = f"{API_BASE_URL}/completions"
     
     payload = {
         "prompt": prompt,
@@ -343,7 +343,7 @@ def test_api_connection() -> bool:
             "user_id": USER_ID
         }
         
-        url = f"{API_BASE_URL}/chat/completions"
+        url = f"{API_BASE_URL}/completions"
         
         logger.info(f"Test URL: {url}")
         logger.info(f"Test Payload: {json.dumps(test_payload, indent=2, ensure_ascii=False)}")
