@@ -44,20 +44,25 @@ make resume-agir
 
 ### 4. View Results
 
-Test results will be saved in the `results/emotion-master/` directory:
+Test results will be saved in the `results/emotion-master/` directory (or `emotion-master-v2/`, `emotion-master-v3/`, etc. if previous results exist):
 
 - `results.jsonl`: Detailed test results
 - `progress.json`: Progress information (supports test resumption)
+
+**Note**: The script automatically creates versioned directories to preserve previous test results. If `emotion-master/` already exists, it will create `emotion-master-v2/`, and so on.
 
 ### 5. Analyze Results
 
 Use existing analysis tools to analyze emotion-master results:
 
 ```bash
-# Analyze emotion-master model results
+# Analyze emotion-master model results (base directory)
 make analyze-model model=emotion-master
 
-# Compare all model results (including emotion-master)
+# Analyze specific version results
+make analyze-model model=emotion-master-v2
+
+# Compare all model results (including all emotion-master versions)
 make compare-models
 ```
 
@@ -68,6 +73,23 @@ make compare-models
 - **Response Parsing**: Intelligent parsing of JSON responses returned by API
 - **Error Handling**: Comprehensive error handling and logging
 - **Connection Testing**: Verify API connection before starting tests
+- **Version Management**: Automatically creates versioned directories to preserve previous results
+
+## Version Management
+
+The script automatically manages result directories to prevent overwriting previous test results:
+
+- **First run**: Creates `results/emotion-master/`
+- **Second run**: Creates `results/emotion-master-v2/` (preserving the original)
+- **Third run**: Creates `results/emotion-master-v3/` (preserving v1 and v2)
+- And so on...
+
+This allows you to:
+- Compare results across different test runs
+- Keep historical performance data
+- Experiment with different API parameters without losing previous results
+
+Each versioned directory contains its own `results.jsonl` and `progress.json` files.
 
 ## Notes
 

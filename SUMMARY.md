@@ -14,6 +14,7 @@ Based on the code structure of `main.py`, implemented complete agir emotion mast
 - ✅ Progress saving and resumption functionality
 - ✅ Complete error handling and logging
 - ✅ API connection testing functionality
+- ✅ Automatic directory versioning to preserve previous results
 
 **API Configuration:**
 - URL: `http://localhost:8000/api/chat/completions`
@@ -36,9 +37,10 @@ New commands:
 
 ### 4. Result Storage
 
-- ✅ Results saved to `results/emotion-master/` directory
+- ✅ Results saved to `results/emotion-master/` directory (with automatic versioning)
 - ✅ Compatible with existing analysis tools
-- ✅ Support using `make analyze-model model=emotion-master` to analyze results
+- ✅ Support using `make analyze-model model=emotion-master` or `model=emotion-master-v2` to analyze results
+- ✅ Preserves previous test results automatically
 
 ### 5. Documentation
 

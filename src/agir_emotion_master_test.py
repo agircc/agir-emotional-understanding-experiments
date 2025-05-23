@@ -31,16 +31,50 @@ MODEL_NAME = "agir-learner"
 USER_ID = "e030d930-913d-4525-8478-1cf77b698364"  # From agir_emotion_master.py
 INPUT_FILE = "EU.jsonl"
 RESULTS_DIR = "results"
-MODEL_DIR = "emotion-master"
-MODEL_RESULTS_DIR = f"{RESULTS_DIR}/{MODEL_DIR}"
-PROGRESS_FILE = f"{MODEL_RESULTS_DIR}/progress.json"
-RESULTS_FILE = f"{MODEL_RESULTS_DIR}/results.jsonl"
+BASE_MODEL_DIR = "emotion-master"
+
+# These will be set dynamically in setup_directories()
+MODEL_RESULTS_DIR = ""
+PROGRESS_FILE = ""
+RESULTS_FILE = ""
 
 def setup_directories() -> None:
-    """Create necessary directories if they don't exist."""
+    """Create necessary directories if they don't exist, with versioning support."""
+    global MODEL_RESULTS_DIR, PROGRESS_FILE, RESULTS_FILE
+    
     Path(RESULTS_DIR).mkdir(exist_ok=True)
+    
+    # Find the next available directory name
+    model_dir = BASE_MODEL_DIR
+    version = 1
+    
+    while True:
+        candidate_dir = f"{RESULTS_DIR}/{model_dir}"
+        if not Path(candidate_dir).exists():
+            # Found an available directory name
+            MODEL_RESULTS_DIR = candidate_dir
+            break
+        else:
+            # Directory exists, try next version
+            version += 1
+            model_dir = f"{BASE_MODEL_DIR}-v{version}"
+            logger.info(f"Directory {candidate_dir} already exists, trying {model_dir}")
+    
+    # Update file paths based on the chosen directory
+    PROGRESS_FILE = f"{MODEL_RESULTS_DIR}/progress.json"
+    RESULTS_FILE = f"{MODEL_RESULTS_DIR}/results.jsonl"
+    
+    # Create the chosen directory
     Path(MODEL_RESULTS_DIR).mkdir(exist_ok=True)
-    logger.info(f"Results will be stored in: {MODEL_RESULTS_DIR}")
+    
+    if version > 1:
+        logger.info(f"Created new version directory: {MODEL_RESULTS_DIR}")
+        logger.info(f"Previous results preserved in emotion-master through emotion-master-v{version-1}")
+    else:
+        logger.info(f"Results will be stored in: {MODEL_RESULTS_DIR}")
+    
+    logger.info(f"Progress file: {PROGRESS_FILE}")
+    logger.info(f"Results file: {RESULTS_FILE}")
 
 def load_data(file_path: str) -> List[Dict[str, Any]]:
     """Load data from JSONL file."""
@@ -310,7 +344,7 @@ def run_test(data: List[Dict[str, Any]], limit: Optional[int] = None, resume: bo
 
 def calculate_statistics() -> Dict[str, Any]:
     """Calculate statistics from the results file."""
-    if not Path(RESULTS_FILE).exists():
+    if not RESULTS_FILE or not Path(RESULTS_FILE).exists():
         return {"error": "No results file found"}
     
     results = []
