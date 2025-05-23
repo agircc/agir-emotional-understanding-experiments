@@ -1,4 +1,4 @@
-.PHONY: env clean run check-env remove-env recreate-env analyze analyze-model compare-models
+.PHONY: env clean run check-env remove-env recreate-env analyze analyze-model compare-models run-agir run-agir-limit resume-agir test-agir-connection
 
 env:
 	conda env create -f environment.yml
@@ -27,6 +27,19 @@ run-limit: check-env
 
 resume: check-env
 	PYTHONPATH=$(shell pwd) python src/main.py --resume
+
+# Agir emotion master API testing commands
+test-agir-connection:
+	PYTHONPATH=$(shell pwd) python src/agir_emotion_master_test.py --test-connection
+
+run-agir: test-agir-connection
+	PYTHONPATH=$(shell pwd) python src/agir_emotion_master_test.py
+
+run-agir-limit: test-agir-connection
+	PYTHONPATH=$(shell pwd) python src/agir_emotion_master_test.py --limit $(limit)
+
+resume-agir: test-agir-connection
+	PYTHONPATH=$(shell pwd) python src/agir_emotion_master_test.py --resume
 
 analyze:
 	PYTHONPATH=$(shell pwd) python src/analyze_results.py
