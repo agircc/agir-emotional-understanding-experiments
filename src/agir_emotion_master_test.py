@@ -90,7 +90,7 @@ Provide your answer in JSON format with two fields: "emotion" and "cause".
 
 def query_agir_api(prompt: str, retries: int = 3, retry_delay: int = 5) -> Optional[Dict[str, Any]]:
     """Query the agir emotion master API with retry logic."""
-    url = f"{API_BASE_URL}/completions"
+    url = f"{API_BASE_URL}/chat/completions"
     
     payload = {
         "prompt": prompt,
@@ -106,16 +106,36 @@ def query_agir_api(prompt: str, retries: int = 3, retry_delay: int = 5) -> Optio
     
     for attempt in range(retries):
         try:
-            logger.info(f"Making API request to {url}")
-            response = requests.post(url, json=payload, headers=headers, timeout=30)
+            logger.info(f"=== API Request Attempt {attempt + 1}/{retries} ===")
+            logger.info(f"URL: {url}")
+            logger.info(f"Headers: {headers}")
+            logger.info(f"Payload: {json.dumps(payload, indent=2, ensure_ascii=False)}")
+            
+            import time
+            start_time = time.time()
+            logger.info(f"Making API request at {time.strftime('%Y-%m-%d %H:%M:%S')}")
+            
+            response = requests.post(url, json=payload, headers=headers, timeout=120)
+            
+            end_time = time.time()
+            duration = end_time - start_time
+            logger.info(f"Request completed in {duration:.2f} seconds")
+            logger.info(f"Response status code: {response.status_code}")
+            logger.info(f"Response headers: {dict(response.headers)}")
             
             if response.status_code == 200:
-                response_data = response.json()
-                logger.info(f"API response: {response_data}")
+                try:
+                    response_data = response.json()
+                    logger.info(f"Response JSON: {json.dumps(response_data, indent=2, ensure_ascii=False)}")
+                except json.JSONDecodeError as je:
+                    logger.error(f"Failed to parse response as JSON: {je}")
+                    logger.error(f"Raw response text: {repr(response.text)}")
+                    response_data = {"error": "Invalid JSON response", "raw_text": response.text}
                 
                 # Extract the text from choices
                 if "choices" in response_data and len(response_data["choices"]) > 0:
                     text_content = response_data["choices"][0].get("text", "")
+                    logger.info(f"Extracted text content: {repr(text_content)}")
                     
                     if not text_content.strip():
                         logger.error("Received empty text content from API")
@@ -131,28 +151,39 @@ def query_agir_api(prompt: str, retries: int = 3, retry_delay: int = 5) -> Optio
                     try:
                         # The text might contain extra content, try to find JSON
                         text_content = text_content.strip()
+                        logger.info(f"Attempting to parse JSON from: {repr(text_content)}")
                         
                         # Look for JSON-like content
                         if text_content.startswith('{') and text_content.endswith('}'):
-                            return json.loads(text_content)
+                            parsed_result = json.loads(text_content)
+                            logger.info(f"Successfully parsed JSON: {parsed_result}")
+                            return parsed_result
                         else:
                             # Try to extract JSON from the text
                             import re
                             json_match = re.search(r'\{[^}]*"emotion"[^}]*"cause"[^}]*\}', text_content)
                             if json_match:
-                                return json.loads(json_match.group())
+                                json_str = json_match.group()
+                                logger.info(f"Found JSON pattern: {json_str}")
+                                parsed_result = json.loads(json_str)
+                                logger.info(f"Successfully parsed extracted JSON: {parsed_result}")
+                                return parsed_result
                             else:
                                 # If no proper JSON found, try to extract emotion and cause manually
                                 emotion_match = re.search(r'"emotion"\s*:\s*"([^"]*)"', text_content)
                                 cause_match = re.search(r'"cause"\s*:\s*"([^"]*)"', text_content)
                                 
                                 if emotion_match and cause_match:
-                                    return {
+                                    extracted_result = {
                                         "emotion": emotion_match.group(1),
                                         "cause": cause_match.group(1)
                                     }
+                                    logger.info(f"Manually extracted emotion and cause: {extracted_result}")
+                                    return extracted_result
                                 else:
                                     logger.error(f"Could not extract emotion and cause from: {text_content}")
+                                    logger.error(f"Emotion match: {emotion_match}")
+                                    logger.error(f"Cause match: {cause_match}")
                                     raise json.JSONDecodeError("Could not extract structured data", text_content, 0)
                         
                     except json.JSONDecodeError as je:
@@ -167,6 +198,7 @@ def query_agir_api(prompt: str, retries: int = 3, retry_delay: int = 5) -> Optio
                             sys.exit(1)
                 else:
                     logger.error("No choices in API response")
+                    logger.error(f"Full response structure: {response_data}")
                     if attempt < retries - 1:
                         logger.info(f"Retrying in {retry_delay} seconds...")
                         time.sleep(retry_delay)
@@ -175,7 +207,9 @@ def query_agir_api(prompt: str, retries: int = 3, retry_delay: int = 5) -> Optio
                         logger.error("No choices after all retries. Exiting.")
                         sys.exit(1)
             else:
-                logger.error(f"API request failed with status {response.status_code}: {response.text}")
+                logger.error(f"API request failed with status {response.status_code}")
+                logger.error(f"Response headers: {dict(response.headers)}")
+                logger.error(f"Response text: {response.text}")
                 if attempt < retries - 1:
                     logger.info(f"Retrying in {retry_delay} seconds...")
                     time.sleep(retry_delay)
@@ -183,6 +217,22 @@ def query_agir_api(prompt: str, retries: int = 3, retry_delay: int = 5) -> Optio
                     logger.error("Max retries reached. Exiting.")
                     sys.exit(1)
                     
+        except requests.exceptions.Timeout as e:
+            logger.error(f"Request timeout after 120 seconds (attempt {attempt+1}/{retries}): {str(e)}")
+            if attempt < retries - 1:
+                logger.info(f"Retrying in {retry_delay} seconds...")
+                time.sleep(retry_delay)
+            else:
+                logger.error("Max retries reached due to timeout. Exiting.")
+                sys.exit(1)
+        except requests.exceptions.ConnectionError as e:
+            logger.error(f"Connection error (attempt {attempt+1}/{retries}): {str(e)}")
+            if attempt < retries - 1:
+                logger.info(f"Retrying in {retry_delay} seconds...")
+                time.sleep(retry_delay)
+            else:
+                logger.error("Max retries reached due to connection error. Exiting.")
+                sys.exit(1)
         except requests.exceptions.RequestException as e:
             logger.error(f"Request error (attempt {attempt+1}/{retries}): {str(e)}")
             if attempt < retries - 1:
@@ -193,6 +243,9 @@ def query_agir_api(prompt: str, retries: int = 3, retry_delay: int = 5) -> Optio
                 sys.exit(1)
         except Exception as e:
             logger.error(f"Unexpected error (attempt {attempt+1}/{retries}): {str(e)}")
+            logger.error(f"Error type: {type(e).__name__}")
+            import traceback
+            logger.error(f"Traceback: {traceback.format_exc()}")
             if attempt < retries - 1:
                 logger.info(f"Retrying in {retry_delay} seconds...")
                 time.sleep(retry_delay)
@@ -280,6 +333,7 @@ def calculate_statistics() -> Dict[str, Any]:
 def test_api_connection() -> bool:
     """Test if the API is accessible."""
     try:
+        logger.info("=== API Connection Test ===")
         test_prompt = "Connection test"
         test_payload = {
             "prompt": test_prompt,
@@ -289,18 +343,48 @@ def test_api_connection() -> bool:
             "user_id": USER_ID
         }
         
-        url = f"{API_BASE_URL}/completions"
-        response = requests.post(url, json=test_payload, timeout=10)
+        url = f"{API_BASE_URL}/chat/completions"
+        
+        logger.info(f"Test URL: {url}")
+        logger.info(f"Test Payload: {json.dumps(test_payload, indent=2, ensure_ascii=False)}")
+        
+        import time
+        start_time = time.time()
+        logger.info(f"Starting connection test at {time.strftime('%Y-%m-%d %H:%M:%S')}")
+        
+        response = requests.post(url, json=test_payload, timeout=120)
+        
+        end_time = time.time()
+        duration = end_time - start_time
+        logger.info(f"Connection test completed in {duration:.2f} seconds")
+        logger.info(f"Test response status code: {response.status_code}")
+        logger.info(f"Test response headers: {dict(response.headers)}")
         
         if response.status_code == 200:
             logger.info("API connection successful")
+            try:
+                response_data = response.json()
+                logger.info(f"Test response data: {json.dumps(response_data, indent=2, ensure_ascii=False)}")
+            except json.JSONDecodeError as je:
+                logger.warning(f"Could not parse test response as JSON: {je}")
+                logger.warning(f"Raw test response: {repr(response.text)}")
             return True
         else:
-            logger.error(f"API connection failed with status {response.status_code}: {response.text}")
+            logger.error(f"API connection failed with status {response.status_code}")
+            logger.error(f"Test response text: {response.text}")
             return False
             
+    except requests.exceptions.Timeout as e:
+        logger.error(f"API connection test timeout after 120 seconds: {str(e)}")
+        return False
+    except requests.exceptions.ConnectionError as e:
+        logger.error(f"API connection test failed - connection error: {str(e)}")
+        return False
     except Exception as e:
         logger.error(f"API connection test failed: {str(e)}")
+        logger.error(f"Error type: {type(e).__name__}")
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
         return False
 
 def main():

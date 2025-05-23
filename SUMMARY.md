@@ -16,7 +16,7 @@ Based on the code structure of `main.py`, implemented complete agir emotion mast
 - ✅ API connection testing functionality
 
 **API Configuration:**
-- URL: `http://localhost:8000/api/completions`
+- URL: `http://localhost:8000/api/chat/completions`
 - Model: `agir-learner`
 - User ID: `e030d930-913d-4525-8478-1cf77b698364`
 - Parameters: max_tokens=150, temperature=0.7

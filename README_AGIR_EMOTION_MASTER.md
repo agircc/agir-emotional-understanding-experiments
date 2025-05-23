@@ -4,7 +4,7 @@ This script is used to test the local agir emotion master API performance on the
 
 ## API Interface
 
-- **URL**: `http://localhost:8000/api/completions`
+- **URL**: `http://localhost:8000/api/chat/completions`
 - **Model**: `agir-learner`
 - **User ID**: `e030d930-913d-4525-8478-1cf77b698364`
 
