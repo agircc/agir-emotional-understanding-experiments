@@ -334,7 +334,7 @@ def test_api_connection() -> bool:
     """Test if the API is accessible."""
     try:
         logger.info("=== API Connection Test ===")
-        test_prompt = "Connection test"
+        test_prompt = "What's you name?"
         test_payload = {
             "prompt": test_prompt,
             "model": MODEL_NAME,
@@ -405,9 +405,9 @@ def main():
             logger.error("API connection test failed")
         return
     
-    if not test_api_connection():
-        logger.error("Cannot connect to agir emotion master API. Please ensure the service is running at http://localhost:8000")
-        return
+    # if not test_api_connection():
+    #     logger.error("Cannot connect to agir emotion master API. Please ensure the service is running at http://localhost:8000")
+    #     return
     
     # Load data
     try:
