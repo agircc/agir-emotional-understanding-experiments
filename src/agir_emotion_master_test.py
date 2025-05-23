@@ -95,8 +95,8 @@ def query_agir_api(prompt: str, retries: int = 3, retry_delay: int = 5) -> Optio
     payload = {
         "prompt": prompt,
         "model": MODEL_NAME,
-        "max_tokens": 150,
-        "temperature": 0.7,
+        "max_tokens": 500,
+        "temperature": 0,
         "user_id": USER_ID
     }
     
