@@ -334,11 +334,11 @@ def test_api_connection() -> bool:
     """Test if the API is accessible."""
     try:
         logger.info("=== API Connection Test ===")
-        test_prompt = "What's you name?"
+        test_prompt = "What book have you read recently?"
         test_payload = {
             "prompt": test_prompt,
             "model": MODEL_NAME,
-            "max_tokens": 10,
+            "max_tokens": 100,
             "temperature": 0.7,
             "user_id": USER_ID
         }
